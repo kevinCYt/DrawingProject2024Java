@@ -1,0 +1,75 @@
+package interfaceUtilisateur;
+
+import interpreteur.TokenType;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
+
+public class FWD implements Function {
+    @Override
+    public void argument(GraphicsContext gc, Cursor cursor, Canvas canvas, String tokenType, Object... args) {
+        if (args.length == 1 && args[0] instanceof Integer) {
+            if (tokenType == TokenType.INT.toString()) {
+                int pixel = (Integer) args[0];
+                drawForward(gc, cursor, canvas, pixel);
+            } else if (tokenType == TokenType.PERCENT.toString()) {
+                if (canvas != null) {
+                    double percentage = (Double) args[0];
+                    int pixel = calculatePixelsFromPercentage(canvas, percentage);
+                    drawForward(gc, cursor, canvas, pixel);
+                } else {
+                    throw new IllegalArgumentException("Canvas cannot be null for percentage calculation");
+                }
+            } else {
+                throw new IllegalArgumentException("Invalid token type");
+            }
+        } else {
+            throw new IllegalArgumentException("Invalid arguments for FWD function");
+        }
+    }
+
+
+    private void drawForward(GraphicsContext gc, Cursor cursor, Canvas canvas, int pixel) {
+        System.out.println("Drawing forward: " + pixel);
+        double angle = cursor.getAngle();
+        double angleRadians = Math.toRadians(angle);
+
+        double endX = cursor.getPosX() + pixel * Math.cos(angleRadians);
+        double endY = cursor.getPosY() + pixel * Math.sin(angleRadians);
+        
+        int endXInt = (int) Math.round(endX);
+        int endYInt = (int) Math.round(endY);
+
+        if (endXInt < 0) {
+            endXInt = 0; // Check if end coordinates are within canvas bounds
+        }
+        else if (endXInt > canvas.getWidth()) {
+        	endXInt = (int) Math.round(canvas.getWidth());
+        }
+        
+        if (endYInt < 0) {
+        	endYInt = 0;
+        }
+        else if (endYInt > canvas.getHeight()) {
+        	endYInt = (int) Math.round(canvas.getHeight());
+        }
+
+        gc.setStroke(Color.BLUE);
+        gc.strokeLine(cursor.getPosX(), cursor.getPosY(), endXInt, endYInt);
+
+        cursor.setPosX(endXInt);
+        cursor.setPosY(endYInt);
+    }
+    
+    public static int calculatePixelsFromPercentage(Canvas canvas, double percentage) {
+        // Assuming percentage represents a fraction of the canvas size
+        double canvasWidth = canvas.getWidth();
+        double canvasHeight = canvas.getHeight();
+        // Calculate the smaller dimension (either width or height) to use as a reference for percentage calculation
+        double reference = Math.min(canvasWidth, canvasHeight);
+        // Calculate pixels based on the percentage of the reference dimension
+        int roundedInt = (int) Math.round((percentage / 100.0) * reference);
+        return roundedInt;
+    }
+
+}

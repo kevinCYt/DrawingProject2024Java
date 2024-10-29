@@ -1,0 +1,11 @@
+INDEX VERSION 1.132+H:\Documents\GitHub\Projet2024\.metadata\.plugins\org.eclipse.jdt.core
+3196690224.index
+4039723482.index
+420622546.index
+1941506117.index
+733457304.index
+374217024.index
+2954640319.index
+1865797976.index
+3334937211.index
+1696264553.index

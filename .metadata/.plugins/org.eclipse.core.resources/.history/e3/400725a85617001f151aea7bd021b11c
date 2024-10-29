@@ -1,0 +1,159 @@
+package interfaceUtilisateur;
+
+import javafx.scene.paint.Color;
+
+/*
+ * Sont codés en dur :
+ * position initiale du curseur, dimension du canva
+ * */
+
+public class Cursor {
+	private int posX;
+	private int posY;
+	private int id;
+	private double angle; // in degrees
+	private boolean showed=false;
+	private Color color;
+	private double thickness;
+	private double opacity;
+	private int dimCanvaX;
+	private int dimCanvaY;
+	private boolean selected=false;
+	
+	public Cursor(int id) {
+		this.setPosX(0);
+		this.setPosY(0);
+		this.setDimCanvaX(getDimCanvaX());
+		this.setDimCanvaY(getDimCanvaY());
+		this.setId(id);
+	}
+
+	public boolean isShowed() {
+		return showed;
+	}
+
+	public void setShowed(boolean showed) {
+		this.showed = showed;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getPosY() {
+		return posY;
+	}
+
+	public void setPosY(int posY) {
+		this.posY = posY;
+	}
+
+	public int getPosX() {
+		return posX;
+	}
+
+	public void setPosX(int posX) {
+		this.posX = posX;
+	}
+	
+	public void move(int x, int y) {
+		this.setPosX(x);
+		this.setPosY(y);
+	}
+
+	public double getThickness() {
+		return thickness;
+	}
+
+	public void setThickness(double thickness) {
+		this.thickness = thickness;
+	}
+
+	public Color getColor() {
+		return color;
+	}
+
+	public void setColor(Color colorhex) {
+		this.color = colorhex;
+	}
+
+	public int getDimCanvaX() {
+		return dimCanvaX;
+	}
+
+	public void setDimCanvaX(int dimCanvaX) {
+		this.dimCanvaX = dimCanvaX;
+	}
+
+	public double getOpacity() {
+		return opacity;
+	}
+
+	public void setOpacity(double opacity) {
+		this.opacity = opacity;
+	}
+
+	public int getDimCanvaY() {
+		return dimCanvaY;
+	}
+
+	public void setDimCanvaY(int dimCanvaY) {
+		this.dimCanvaY = dimCanvaY;
+	}
+
+	public double getAngle() {
+		return angle;
+	}
+
+	public void setAngle(double angle) {
+		this.angle = angle;
+	}
+	public boolean isSelected() {
+		return selected;
+	}
+
+	public void setSelected(boolean selected) {
+		this.selected = selected;
+	}
+}
+
+/*
+ * Chaque instruction va passer par la librairie gc. de java.
+ * l'utilisateur, écrit une commande
+ * on stocke la commande avec le curseur qui doit réaliser l'action
+ * la commande java résultaent sera composée de l'action initiale avec les informations du curseur.
+ * 
+ * if faut une table d'équivalence
+ * puis la concaténation des infrmations
+ * puis la réalisation des actions.
+ * */
+
+/*
+public void readFile() {
+	String filPath = '':
+	BufferedReader reader = null;
+
+	try {
+        reader = new BufferedReader(new FileReader(filePath));
+        String line;
+        
+        while ((line = reader.readLine()) != null) {
+            System.out.println(line);
+        }
+    } catch (IOException e) {
+        System.err.println("An error occurred while reading the file: " + e.getMessage());
+    } finally {
+        if (reader != null) {
+            try {
+                reader.close();
+            } catch (IOException e) {
+                System.err.println("Failed to close reader: " + e.getMessage());
+            }
+        }
+    }
+}
+*/

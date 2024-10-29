@@ -1,0 +1,46 @@
+package interfaceUtilisateur;
+
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
+
+public class COLOR implements Function{
+	public void argument(GraphicsContext gc, Cursor cursor, Canvas canvas, String tokenType, Object... args) {// apagnan hex
+		if (args.length == 1 && args[0] instanceof String) {
+			System.out.println("oui");
+			String hex = (String) args[0];
+			if (hex.charAt(0) == '#') {
+	            hex = hex.substring(1);
+	        }
+
+	        int r = Integer.parseInt(hex.substring(0, 2), 16) /255;
+	        int g = Integer.parseInt(hex.substring(2, 4), 16)/255;
+	        int b = Integer.parseInt(hex.substring(4, 6), 16)/255;
+	        
+	        Color newColor = new Color(r, g, b, cursor.getOpacity());
+	        cursor.setColor(newColor);
+		}
+		
+        else if (args.length == 3 && args[0] instanceof Integer && args[1] instanceof Integer && args[2] instanceof Integer) {
+			int r = (int) args[0];
+			int g = (int) args[1];
+			int b = (int) args[2];
+			
+			Color newColor = new Color(r, g, b, cursor.getOpacity());
+	        cursor.setColor(newColor);
+		}
+		
+        else if (args.length == 3 && args[0] instanceof Double && args[1] instanceof Double && args[2] instanceof Double) {
+        	double r = (int) args[0];
+			double g = (int) args[1];
+			double b = (int) args[2];
+			
+			int R = (int) Math.round(r*255);
+			int G = (int) Math.round(g*255);
+			int B = (int) Math.round(b*255);
+			
+			Color newColor = new Color(R, G, B, cursor.getOpacity());
+	        cursor.setColor(newColor);
+        }
+	}
+}

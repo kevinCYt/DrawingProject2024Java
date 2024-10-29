@@ -1,0 +1,253 @@
+package interpreteur;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import interfaceUtilisateur.*;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+
+public class Evaluator {
+    private GraphicsContext gc;
+    private Canvas canvas;
+
+    public Evaluator(GraphicsContext gc, Canvas canvas, HashMap<Integer, Cursor> activeCursor) {
+        this.gc = gc;
+        this.canvas = canvas;
+    }
+
+    public void executeLine(String input, int lineNumber, CursorManager cursorManager) throws Exception {
+        ArrayList<ArrayList<TokenType>> tokens = Lexer.tokenize(input);
+        System.out.println("Tokens size: " + tokens.size());
+        System.out.println("Tokens content: " + tokens);
+        if (lineNumber < 0 || lineNumber >= tokens.size()) {
+            throw new IllegalArgumentException("Invalid line number: " + lineNumber);
+        }
+        // Split the input text into individual lines
+        String[] lines = input.split("\\r?\\n");
+        input = lines[lineNumber];
+        System.out.println(input);
+        if (Parser.parse(tokens)) {
+
+            String[] words = input.split("\\s+");
+            ArrayList<String> wordList = new ArrayList<>(Arrays.asList(words));
+
+            ArrayList<Object> parameterList = new ArrayList<>();
+
+            String currentTokenInString = "";
+            for (int i = 1; i < tokens.get(lineNumber).size(); i++) {
+                currentTokenInString = tokens.get(lineNumber).get(i).toString();
+                System.out.println("Current token: " + currentTokenInString);
+                if (currentTokenInString.equalsIgnoreCase("ID") || currentTokenInString.equalsIgnoreCase("INT")) {
+                    Pattern pattern = Pattern.compile("(\\d+)"); 
+                    Matcher matcher = pattern.matcher(wordList.get(i));
+                    if (matcher.find()) {
+                        String match = matcher.group(1); // Group 1 contains the numeric part
+                        System.out.println("Match found: " + match);
+                        parameterList.add(Integer.parseInt(match));
+                    } else {
+                        System.out.println("No match found");
+                    }
+                } else if (currentTokenInString.equalsIgnoreCase("DOUBLE") || currentTokenInString.equalsIgnoreCase("PERCENT")
+                        || currentTokenInString.equalsIgnoreCase("DEGREE")) {
+                    // Regular expression to match a double value with optional decimal part
+                    Pattern pattern = Pattern.compile("(\\d*\\.?\\d+)(%|°)?");
+                    Matcher matcher = pattern.matcher(wordList.get(i));
+
+                    if (matcher.find()) {
+                        String match = matcher.group();
+                        System.out.println("Match found: " + match);
+                        parameterList.add(Double.parseDouble(match));
+                    } else {
+                        System.out.println("No match found");
+                    }
+                }else if(currentTokenInString.equalsIgnoreCase("COLOR_HEX")) {
+                	// Regular expression to match 6 HEXADECIMAL num
+                    Pattern pattern = Pattern.compile("#[0-9A-Fa-f]{6}");
+                    Matcher matcher = pattern.matcher(wordList.get(i));
+
+                    if (matcher.find()) {
+                        String match = matcher.group();
+                        System.out.println("Match found: " + match);
+                        parameterList.add((match));
+                    } else {
+                        System.out.println("No match found");
+                    }
+                }
+            }
+
+            Function objFunction = null;
+            switch (tokens.get(lineNumber).get(0)) {
+            case FWD:
+                if (parameterList.get(0) instanceof Integer) {
+                    if (cursorManager.getActiveCursor().isEmpty()) {
+                        throw new Exception("No cursor selected.");
+                    } else {
+                        objFunction = new FWD();
+                        for (int id : cursorManager.getActiveCursor().keySet()) {
+                            try {
+                                objFunction.argument(gc, cursorManager.getActiveCursor().get(id), canvas, currentTokenInString, parameterList.get(0));
+                            } catch (IllegalArgumentException e) {
+                                System.out.println(e.getMessage());
+                            }
+                        }
+                    }
+                } else {
+                    throw new IllegalArgumentException("Invalid argument type");
+                }
+                break;
+
+            case BWD:
+                if (parameterList.get(0) instanceof Integer) {
+                    if (cursorManager.getActiveCursor().isEmpty()) {
+                        throw new Exception("No cursor selected.");
+                    } else {
+                        objFunction = new BWD();
+                        for (int id : cursorManager.getActiveCursor().keySet()) {
+                            try {
+                                objFunction.argument(gc, cursorManager.getActiveCursor().get(id), canvas, currentTokenInString, parameterList.get(0));
+                            } catch (IllegalArgumentException e) {
+                                System.out.println(e.getMessage());
+                            }
+                        }
+                    }
+                } else {
+                    throw new IllegalArgumentException("Invalid argument type");
+                }
+                break;
+
+            case LOOKAT:
+                if (parameterList.get(0) instanceof Integer && parameterList.get(1) instanceof Integer) {
+                    if (cursorManager.getActiveCursor().isEmpty()) {
+                        throw new Exception("No cursor selected.");
+                    } else {
+                        objFunction = new LOOKAT();
+                        for (int id : cursorManager.getActiveCursor().keySet()) {
+                            try {
+                                objFunction.argument(gc, cursorManager.getActiveCursor().get(id), canvas, currentTokenInString, parameterList.get(0), parameterList.get(1));
+                            } catch (IllegalArgumentException e) {
+                                System.out.println(e.getMessage());
+                            }
+                        }
+                    }
+                } else {
+                    throw new IllegalArgumentException("Invalid argument type");
+                }
+                break;
+
+                case CURSOR:
+                    if (parameterList.get(0) instanceof Integer) {
+                        try {
+                            if (!cursorManager.getHashs().contains(parameterList.get(0))) {
+                                Cursor cursor = new Cursor((Integer) parameterList.get(0));
+                                cursorManager.setNewCursor(cursor, (Integer) parameterList.get(0));
+                            } else {
+                                throw new Exception("This Cursor Already Exist \n No cursor were added.");
+                            }
+                        } catch (IllegalArgumentException e) {
+                            System.out.println(e.getMessage());
+                        } catch (Exception e) {
+                            throw new Exception("This Cursor Already Exist\nNo cursor were added.");
+                        }
+                    } else {
+                        throw new IllegalArgumentException("Invalid argument type");
+                    }
+                    break;
+                case SELECT:
+                    if (parameterList.get(0) instanceof Integer) {
+                        try {
+                            cursorManager.selectCursor((Integer) parameterList.get(0));
+                            cursorManager.setActiveCursor(cursorManager.getCursors());
+                        } catch (IllegalArgumentException e) {
+                            System.out.println(e.getMessage());
+                        }
+                    } else {
+                        throw new IllegalArgumentException("Invalid argument type");
+                    }
+                    break;
+                case
+                REMOVE:
+                    if (parameterList.get(0) instanceof Integer) {
+                        try {
+                            cursorManager.removeCursor((Integer) parameterList.get(0));
+                            cursorManager.setActiveCursor(cursorManager.getCursors());
+                        } catch (IllegalArgumentException e) {
+                            System.out.println(e.getMessage());
+                        }
+                    } else {
+                        throw new IllegalArgumentException("Invalid argument type");
+                    }
+                    break;
+
+                case MOV:
+                    if (parameterList.get(0) instanceof Integer && parameterList.get(1) instanceof Integer) {
+                        if (cursorManager.getActiveCursor().isEmpty()) {
+                            throw new Exception("No cursor selected.");
+                        } else {
+                            objFunction = new MOV();
+                            for (int id : cursorManager.getActiveCursor().keySet()) {
+                                try {
+                                    objFunction.argument(gc, cursorManager.getActiveCursor().get(id), canvas, currentTokenInString, parameterList.get(0), parameterList.get(1));
+                                } catch (IllegalArgumentException e) {
+                                    System.out.println(e.getMessage());
+                                }
+                            }
+                        }
+                    } else {
+                        throw new IllegalArgumentException("Invalid argument type");
+                    }
+                    break;
+                    
+                case COLOR:
+                    if (parameterList.size() == 3) {
+                    	if(parameterList.get(0) instanceof Integer && parameterList.get(1) instanceof Integer && parameterList.get(2) instanceof Integer
+                    			|| parameterList.get(0) instanceof Double && parameterList.get(1) instanceof Double && parameterList.get(2) instanceof Double ) {
+                            if (cursorManager.getActiveCursor().isEmpty()) {
+                                throw new Exception("No cursor selected.");
+                            } else {
+                            	objFunction = new COLOR();
+                            	for (int id : cursorManager.getActiveCursor().keySet()) {
+                            		try {
+                            			objFunction.argument(gc, cursorManager.getActiveCursor().get(id), canvas, currentTokenInString, parameterList.get(0), parameterList.get(1),parameterList.get(2));    		
+	                            	}catch(IllegalArgumentException e) {
+	                            		System.out.println(e.getMessage());
+	                            	}
+                            	}
+                            }
+                    	}
+                    }else if(parameterList.size() == 1) {
+                    	if(parameterList.get(0) instanceof String ) {
+                            if (cursorManager.getActiveCursor().isEmpty()) {
+                                throw new Exception("No cursor selected.");
+                            } else {
+                            	objFunction = new COLOR();
+                            	for (int id : cursorManager.getActiveCursor().keySet()) {
+                            		try {
+                            			System.out.println("oui");
+                            			objFunction.argument(gc, cursorManager.getActiveCursor().get(id), canvas, currentTokenInString, parameterList.get(0));    		
+	                            	}catch(IllegalArgumentException e) {
+	                            		System.out.println(e.getMessage());
+	                            	}
+                            	}
+                            }
+                    	}else {
+                    		throw new Exception("bb");
+                    	}
+                    	
+	                        
+                    } else {
+                        throw new IllegalArgumentException("Invalid argument");
+                    }
+                    break;
+                default:
+                    // Handle unknown function type
+                    throw new IllegalArgumentException("Unknown function type");
+            }
+
+        } else {
+            throw new IllegalArgumentException("Syntax error [Parser]: Invalid expression");
+        }
+    }
+}
